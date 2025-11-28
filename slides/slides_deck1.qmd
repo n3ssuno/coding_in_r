@@ -1,0 +1,1784 @@
+---
+title: "Coding in R"
+subtitle: "Deck 1 &bull; Computer Programming in R"
+date: "2024-11-12"
+date-format: "long"
+author: "Carlo Bottai"
+institute: "Postdoctoral Fellow <br> Department of Economics, Management, and Statistics (DEMS) <br> University of Milano-Bicocca"
+toc: true
+toc-depth: 1
+from: markdown+emoji
+format:
+ revealjs:
+   theme: [serif, files/custom.scss]
+   slide-number: true
+   aspect-ratio: "16:9"
+   progress: true
+   min-scale: 1
+   max-scale: 1
+   width: 1150
+   lightbox: true
+   pdf-max-pages-per-slide: 1
+---
+
+## What is Statistics About?
+
+-   [Statistics]{.mark} is about collecting, organizing, analyzing, interpreting, and presenting [data]{.mark} to answer (research) questions and draw reliable conclusions.
+    -   The goal is to transform [raw data into knowledge]{.mark}.
+
+## What the Data are?
+
+-   [Data]{.mark} are [characteristics]{.mark} that have been [collected]{.mark} and recorded (by you or others) [to describe]{.mark} aspects of [the world]{.mark} relevant to a question you would like to answer.
+    -   *For example,* you collected the height of a group of people.
+
+## What Statistical Computing is?
+
+-   We can use [computers]{.mark} and algorithms (i.e., instructions written in a *programming language* that a computer knows to interpret) to [automate the analysis]{.mark} of those data, quickly and reliably.
+-   To do so, this information must be structured and stored so it can be easily read and processed by a computer.
+    -   *For example,* each person in the group is represented by a row in an Excel spreadsheet. A column of a spreadsheet represents their heights, reported in meters. The height of each person is recorded as a floating-point number (e.g., 1.72) in a cell of the column.
+
+## What a Variable is? {.smaller}
+
+-   A [variable]{.mark} is any characteristic (*categorical variable*), measurement (*continuous variable*), or quantity (*discrete variable*) that can take on different values.
+    -   It is a piece of information you are tracking for every observation.
+    -   Think of a variable as the heading of a column in your Excel spreadsheet. *For example:*
+    
+    | Person           | Height (var.)             | Age (var.)                | Gender (var.)               | 
+    |------------------|---------------------------|---------------------------|-----------------------------|
+    | 1                | 1.83                      | 25                        | Male                        |
+    | 2                | 1.65                      | 31                        | Female                      |
+    | 3                | 1.77                      | 45                        | Female                      |
+    
+-   An [attribute]{.mark} (or *value*) is the specific piece of information recorded for a single observation (i.e., a row of your spreadsheet).
+    -   It is the specific state or amount recorded for that characteristic for a specific observation.
+
+# Computer Programming
+
+## Computer Programming (I)
+
+-   [Computer programming]{.mark} (or *coding*) is the [composition of sequences of instructions]{.mark}, called *programs*, [that computers can follow to perform tasks]{.mark}. It involves designing and implementing algorithms (step-by-step specifications of procedures) by writing code in a *programming language*.
+-   Programmers typically use [high-level]{.mark} programming [languages (like R)]{.mark} that are more [easily intelligible to humans]{.mark} than machine code, which is directly executed by the central processing unit.
+
+## Computer Programming (II)
+
+-   Computer programming is an important skill for researchers:
+    -   **Economics and Management**<br>fields have become heavily [data-driven]{.mark}. Traditional tools (like Excel) have limitations. Coding allows for handling more extensive and complex datasets, more detailed visualizations, and more sophisticated statistical models.
+    -   **Programming automates repetitive tasks**<br>saving time and reducing the likelihood of errors. Moreover, coding helps make research workflows sharable and reproducible.
+
+## Computer Programming (III)
+
+-   Computer programming consists of using *computational thinking* in problem-solving:
+    
+    Decomposition
+    : Break down complex problems into smaller, more manageable components or steps.
+    
+    Pattern Recognition and Generalization
+    : Identify similarities or patterns in data or processes and apply similar solutions to similar problems.
+    
+    Algorithm Design
+    : Develop step-by-step instructions or rules to solve a problem or perform a task.
+    
+    Data Representation
+    : Organize and visualize data in ways that make it easier to understand and manipulate, such as through tables or charts.
+    
+    Iterative Refinement
+    : Constantly revise and improve solutions through a cyclical process.
+
+## Computer Programming in Management Research {.smaller}
+
+To use a programming language (like R) can help you in your research. For example, you can:
+
+-   Analyze survey data to identify key drivers.
+    -   *Example:* Imagine you've collected survey responses on employee satisfaction and various organizational factors (e.g., leadership style, compensation, work-life balance). You can use a script to efficiently clean, organize, and statistically analyze this data to discover which specific factors have the strongest impact on employee satisfaction.
+-   Process unstructured text for strategic insights.
+    -   *Example:* You can write a script to analyze customer reviews from online platforms or internal company reports. This allows you to extract common themes, sentiment (positive/negative), and emerging trends.
+-   Automate data collection from public sources:
+    -   *Example:* Instead of manually copying data, you can write R scripts to automatically pull financial data from public company reports (e.g., SEC filings), market data from APIs, or specific industry statistics.
+
+# The R Language
+
+## R's Purpose and Short History
+
+-   R is an [integrated suite]{.mark} of software facilities [for statistical computation and graphics]{.mark}. It helps with data manipulation, calculation, and graphical display.
+-   The R language (written beginning in the 1990s by Ross Ihaka and Robert Gentleman at the University of Auckland, New Zealand) is a free software [dialect of the "New S"]{.mark} (which was designed in the 1980s at Bell Labs, USA, by John Chambers and colleagues), and has been in widespread use in the statistical community since then.
+
+## Characteristics of R as a Programming Language (I)
+
+-   The language is [interpreted]{.mark}, so you need an interpreter to execute your code (i.e., the *R console*).
+-   Its semantics are multi-paradigm, but mostly of a [*functional (declarative) programming*]{.mark} variety.
+    <!-- \footnote{R is an expression-based language (see R. Ihaka *The R Project: A Brief History and Thoughts About the Future* <https://www.stat.auckland.ac.nz/~ihaka/downloads/Massey.pdf>)}. As such it is intrinsicly functional, but it OOP flavours -->
+-   In the last years, R grew to one of the most important languages, particularly in the data science domain.
+    -   However, «as a language, R is like French; it has an elegant core, but every rule comes with a set of ad-hoc exceptions that directly contradict it» <span style="font-size: 0.75em">--- Morandat et al. (2012) *Evaluating the Design of the R Language*.</span>
+
+## Characteristics of R as a Programming Language (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+**Imperative (procedural) programming**
+
+It focuses on how to perform tasks step-by-step (e.g., loops, conditionals)
+
+``` r
+# Step 1: Initialize the grand total
+# and elements count
+tot_mpg <- 0
+n <- 0
+# Step 2: Loop over the rows of the dataset
+for (i in 1:nrow(mtcars)) {
+ # Step 3: Check if the car has 6 cylinders
+ if (mtcars[i, "cyl"] == 6) {
+  # Step 4: Update the grand total
+  # and elements count
+  tot_mpg <- tot_mpg + mtcars[i, "mpg"]
+  n <- n + 1
+ }
+}
+# Step 5: Calculate the mean mpg
+average_mpg <- tot_mpg / n
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+**Functional (declarative) programming**
+
+It focuses on what the result should be (e.g., transformations, queries)
+
+``` r
+# Step 1: Filter cars with 6 cylinders
+mtcars_cyl6 <- subset(mtcars, cyl == 6)
+# Step 2: Select the mpg column
+mtcars_cyl6_mpg <- with(mtcars_cyl6, mpg)
+# Step 3: Calculate the mean mpg
+average_mpg <- mean(mtcars_cyl6_mpg)
+```
+:::
+:::::
+
+## Characteristics of R as a Programming Language (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+**Imperative (procedural) programming**
+
+It focuses on how to perform tasks step-by-step (e.g., loops, conditionals)
+
+``` r
+# Step 1: Initialize the grand total
+# and elements count
+tot_mpg <- 0
+n <- 0
+# Step 2: Loop over the rows of the dataset
+for (i in 1:nrow(mtcars)) {
+ # Step 3: Check if the car has 6 cylinders
+ if (mtcars[i, "cyl"] == 6) {
+  # Step 4: Update the grand total
+  # and elements count
+  tot_mpg <- tot_mpg + mtcars[i, "mpg"]
+  n <- n + 1
+ }
+}
+# Step 5: Calculate the mean mpg
+average_mpg <- tot_mpg / n
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+**Functional (declarative) programming**
+
+It focuses on what the result should be (e.g., transformations, queries)
+
+``` r
+average_mpg <- mtcars |>
+ # Step 1: Filter cars with 6 cylinders
+ subset(cyl == 6) |>
+ # Step 2: Select the mpg column
+ with(mpg) |>
+ # Step 3: Calculate the mean mpg
+ mean()
+```
+:::
+:::::
+
+## Installing R
+
+-   You can find the R installer at <https://cloud.r-project.org/>.
+-   You can use R in the cloud (with limited availability of resources) for example at <https://posit.cloud/> or <https://colab.research.google.com/>.
+-   Even though beyond the scope of this course, to avoid messy installations, consider using the *renv* package (<https://rstudio.github.io/renv/>).
+
+## Installing RStudio {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   As said, the [*R console*]{.mark} interprets your commands, as you type them in it.
+-   Alternatively (and preferably), you can type the list of R commands in an [*R script*]{.mark} (\<file\>.R) and ask the console to execute, sequentially, the commands listed in this file.
+-   You can find the RStudio installer at <https://posit.co/download/rstudio-desktop/>.
+:::
+
+::: {.column .gutter-left width="48%"}
+![](images/rstudio.png)
+:::
+:::::
+
+## Installing RStudio {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   As said, the [*R console*]{.mark} interprets your commands, as you type them in it.
+-   Alternatively (and preferably), you can type the list of R commands in an [*R script*]{.mark} (\<file\>.R) and ask the console to execute, sequentially, the commands listed in this file.
+-   You can find the RStudio installer at <https://posit.co/download/rstudio-desktop/>.
+:::
+
+::: {.column .gutter-left width="48%"}
+![](images/rstudio_annotated.png)
+:::
+:::::
+
+## RStudio User Interface {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+-   The RStudio user interface has four primary panes:
+    -   Source pane
+    -   Console pane
+    -   Environment pane <br>
+        [that contains the Environment, History, Connections, Build, VCS , and Tutorial tabs]{.small-text}
+    -   Output pane <br>
+        [that contains the Files, Plots, Packages, Help, Viewer, and Presentation tabs]{.small-text}
+:::
+
+::: {.column .gutter-left width="65%"}
+![](images/rstudio_interface.png)
+:::
+:::::
+
+## RStudio User Interface {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+-   The [source pane]{.mark} allows users to view and edit various code-related file (like a `<file>.R`), or general text files (like a `<file>.txt`).
+    -   If you open a file or create a new one, it will be displayed as a new tab in this pane.
+    -   `<file>.R` files are R source files that contain R code ready to be executed.
+        -   You can execute the whole file with a click on the *Source* button in the pane.
+        -   You can execute the script line by line (or in blocks) with a click on the *run* button in the pane.
+:::
+
+::: {.column .gutter-left width="65%"}
+![](images/rstudio_interface_source.png)
+:::
+:::::
+
+## RStudio User Interface {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+-   The [console pane]{.mark} provides an area to interactively execute code.
+    -   You can directly type R commands in the *R console* to execute them.
+    -   When you ask to execute some R code from the source pane, RStudio essentially copy-pastes the code into the console pane and executes it.
+:::
+
+::: {.column .gutter-left width="65%"}
+![](images/rstudio_interface_console.png)
+:::
+:::::
+
+## RStudio User Interface {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+-   The [environment pane]{.mark} contains several tabs. Among others:
+    -   The [Environment tab]{.mark} displays currently saved R objects. E.g., if you read some data from a CSV file, the resulting data frame will be displayed here as an entry of the list of objects available in memory to be used for the analysis.
+    -   The [History tab]{.mark} displays the commands that were executed in the current session.
+:::
+
+::: {.column .gutter-left width="65%"}
+![](images/rstudio_interface_environment.png)
+:::
+:::::
+
+## RStudio User Interface {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+-   The [output pane]{.mark} contains several tabs. Among others:
+    -   The [Files tab]{.mark} provides interactive exploration of the files and folders in your computer.
+    -   The [Plots tab]{.mark} displays static images (like charts and plots) generated by code until the session is restarted.
+    -   The [Packages tab]{.mark} allows for viewing currently installed R packages and there is an install button for installation of new packages.
+    -   The [Help tab]{.mark} is used to display package documentation and vignettes.
+:::
+
+::: {.column .gutter-left width="65%"}
+![](images/rstudio_interface_output.png)
+:::
+:::::
+
+## Documentation and Online Resources {.smaller}
+
+-   You can read the documentation of a function (e.g., `sum()`) with
+
+``` r
+help(sum)
+?sum
+```
+
+-   Given the short name this programming language has, sometimes it is hard to find help about R using web search engines, like Google. As an alternative, you can try <https://rseek.org>.
+-   GenAI chat bot are capable of coding in R and can assist you both in developing your code and along your learning path.
+-   There are plenty of open books about R. Some are listed in the references at the end of the slides.
+-   There are also some good (non-free) courses about R on DataCamp (<https://www.datacamp.com>).
+
+## The R Syntax (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R is an [interpreted language]{.mark}. You type, one after the other, a list of R commands in a [console]{.mark}.
+-   The console interprets your code and gives you an answer.
+-   You can do basic math in R.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+2 + 2
+[1] 4
+```
+:::
+:::::
+
+## The R Syntax (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can [assign]{.mark} values to variables (e.g., `x`) using `<-`
+    -   A variable is, technically, an "object".
+-   Stored variables can be re-used calling their "symbol" and you can apply functions to them.
+-   Each function has one or more arguments, of which, only some are mandatory.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+x <- c(1, 2, 3)
+
+x
+[1] 1 2 3
+
+x * 2
+[1] 2 4 6
+
+sum(x)
+[1] 6
+```
+:::
+:::::
+
+::: {.callout-note style="padding-top: 1em; font-size: .75em;"}
+In R, a syntactically valid name consists of letters, numbers and the dot or underscore characters and starts with a letter or the dot not followed by a number. E.g., `x`, `.x`, `x1`, `x.1`, and `x_1` are all valid names.
+
+In R, there are a few reserved words. For example, `if`, `TRUE`, and `NA`. They are language primitives and you cannot modify them.
+
+However, other "base" variables (e.g., `T`, that is initialized as `TRUE`) are just variables as any other one. This means that you can overwrite them (e.g., by running `T <- 0` then `T & T` returns `FALSE`). And, in R, functions are objects, too. Therefore, you can also overwrite them. E.g., if you run `sum <- 1`, now `sum` returns `1`, while `sum(1, 2)` returns `3`.
+:::
+
+------
+
+::: {.v-center-container}
+![](images/assign_value.png){width="90%"}
+:::
+
+------
+
+::: {.v-center-container}
+![](images/assign_vector.png){width="90%"}
+:::
+
+## The R Syntax (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can see how a function works with `?sum` (or `help(sum)`)
+-   You can also search within the help with `??foo` for all the functions referring to the term "foo" or `help.search("foo bar")` for "foo bar"
+-   If you need further help, the WWW or a GenAI chat-bot are your friends.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+?sum
+```
+:::
+:::::
+
+## The R Syntax (IV) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   A more modern way to program in R entails the use of the *pipes*.
+-   You can use a *pipe* to concatenate functions.
+-   Each RHS function uses the output of the LHS function as its first input.
+-   The *magrittr* package (part of the *tidyverse*) provides the command `%>%`.
+-   From R 4.2 onwards, you can use the bult-in command `|>`.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+x |> log() |> sum()
+[1] 1.791759
+```
+:::
+:::::
+
+## The R Packages {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Even though neither particularly fast nor efficient, a key reason for the popularity of R is its [rich ecosystem of packages]{.mark}.
+-   You can extend the basic R functionality by installing and using additional packages.
+    -   The `library("<package>")` function loads and attaches a package to your current "working session".
+        -   You can think of it as if you have a large toolbox with different, specialized toolkits. With the `library()` function, you pick all the tools from one of the toolkit, and put them on the workbench.
+    -   Alternatively, you can use `<package>::<function>()` to directly access a specific function of the package.
+-   The official R packages are stored in the CRAN repository.
+    -   You can also install packages from other sources, like GitHub.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+install.packages("lubridate")
+
+lubridate::date("1967-11-30")
+
+library(lubridate)
+date("1967-11-30")
+
+remotes::install_github("rstudio/gradethis")
+```
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Beyond the scope of this course, a more modern alternative to the base `install.packages()` is to use the `pak` package, and maybe you should consider using `renv` to keep track of the versions of the packages you install.
+:::
+
+:::
+:::::
+
+## Hands-on Tutorial
+
+-   It's time for a hands-on tutorial! :sparkles:
+
+# Data Structures and Operations in R
+
+## Data Types in R {.smaller}
+
+:::::: columns
+:::: {.column width="48%"}
+-   Each R object is of a [class]{.mark}.
+
+::: {style="font-size: .8em;"}
+| Class     | Example                         |
+|-----------|---------------------------------|
+| Numeric   | `c(1, 2, 3.4, -5)`              |
+| Character | `c("a", "bcd")`                 |
+| Factor    | `factor(c("a", "b", "c", "a"))` |
+| Logical   | `c(TRUE, FALSE)`                |
+:::
+:::::
+
+::: {.column .gutter-left width="48%"}
+``` r
+class(1)
+[1] "numeric"
+
+class("abc")
+[1] "character"
+
+x <- factor(c("a", "b", "c", "a"))
+
+class(x)
+[1] "factor"
+
+x
+[1] a b c a
+Levels: a b c
+
+class(TRUE)
+[1] "logical"
+```
+:::
+::::::
+
+## Data Types in R {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   The same holds for data frame columns (being each an R object, too).
+-   To know the class of an object is key. It helps in knowing which kind of functions you can apply to which columns (i.e., variables).
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+foo <- factor(
+  c("one", "two", "one"))
+
+foo
+[1] one two one
+Levels: one two
+
+max(foo)
+Error [...]:
+  'max' not meaningful for factors
+
+bar <- factor(
+  c("one", "two", "one"), 
+  ordered = TRUE, 
+  levels = c("one", "two"))
+
+bar
+[1] one two one
+Levels: one < two
+
+max(bar)
+[1] two
+Levels: one < two
+```
+:::
+:::::
+
+## Data Types in R {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can apply data type *coercion* with functions like `as.numeric()`, `as.character()`, or `as.logical()`.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+x <- 1:5
+
+as.character(x)
+[1] "1" "2" "3" "4" "5"
+```
+:::
+:::::
+
+## Data Structures in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R's base data structures can be organized by their dimensionality (1D, 2D, or nD) and whether they are homogeneous (all contents must be of the same type) or heterogeneous (the contents can be of different types).
+
+::: {style="font-size: .90em"}
+|        | Homogeneous | Heterogeneous |
+|--------|-------------|---------------|
+| **1D** | Vector      | List          |
+| **2D** | Matrix      | Data Frame    |
+| **nD** | Array       |               |
+:::
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Arrays are beyond the scope of this course. But are mentioned here for completeness.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+# Vector
+c(1, 2, 3)
+
+# Vector (equivalent)
+1:3
+
+# List
+list(1:3, c("a", "b", "c"))
+
+# Matrix
+matrix(1:10, nrow = 5)
+
+# Data frame
+data.frame(a = 1:5, b = letters[1:5])
+
+# Array
+array(1:30, dim = c(5, 2, 3))
+```
+:::
+:::::
+
+## Data Structures in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R's base data structures can be organized by their dimensionality (1D, 2D, or nD) and whether they are homogeneous (all contents must be of the same type) or heterogeneous (the contents can be of different types).
+
+::: {style="font-size: .90em"}
+|        | Homogeneous | Heterogeneous |
+|--------|-------------|---------------|
+| **1D** | Vector      | List          |
+| **2D** | Matrix      | Data Frame    |
+| **nD** | Array       |               |
+:::
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Arrays are beyond the scope of this course. But are mentioned here for completeness.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+foo <- c("one", "two", "three", "four")
+
+foo
+[1] one two three four
+
+class(foo)
+[1] "character”
+
+dim(foo)
+NULL
+
+dim(foo) <- c(2, 2)
+
+class(foo)
+[1] "matrix" "array"
+
+foo <- c("one", "two", "three", "four",
+         "one", "two", "three", "four")
+
+dim(foo) <- c(2, 2, 2)
+
+class(foo)
+[1] "array"
+```
+:::
+:::::
+
+## Data Structures in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R's base data structures can be organized by their dimensionality (1D, 2D, or nD) and whether they are homogeneous (all contents must be of the same type) or heterogeneous (the contents can be of different types).
+
+::: {style="font-size: .90em"}
+|        | Homogeneous | Heterogeneous |
+|--------|-------------|---------------|
+| **1D** | Vector      | List          |
+| **2D** | Matrix      | Data Frame    |
+| **nD** | Array       |               |
+:::
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Arrays are beyond the scope of this course. But are mentioned here for completeness.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+foo
+, , 1
+
+     [,1]  [,2]   
+[1,] "one" "three"
+[2,] "two" "four" 
+
+, , 2
+
+     [,1]  [,2]   
+[1,] "one" "three"
+[2,] "two" "four"
+
+foo[, , 2]
+     [,1]  [,2]   
+[1,] "one" "three"
+[2,] "two" "four" 
+
+class(foo[, , 2])
+[1] "matrix" "array"
+```
+:::
+:::::
+
+## Data Structures in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R's base data structures can be organized by their dimensionality (1D, 2D, or nD) and whether they are homogeneous (all contents must be of the same type) or heterogeneous (the contents can be of different types).
+
+::: {style="font-size: .90em"}
+|        | Homogeneous | Heterogeneous |
+|--------|-------------|---------------|
+| **1D** | Vector      | List          |
+| **2D** | Matrix      | Data Frame    |
+| **nD** | Array       |               |
+:::
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Arrays are beyond the scope of this course. But are mentioned here for completeness.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+bar <- data.frame(
+    x = 1:5,
+    y = letters[1:5]
+)
+
+bar
+  x y
+1 1 a
+2 2 b
+3 3 c
+4 4 d
+5 5 e
+```
+:::
+:::::
+
+## Data Structures in R (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Let's notice that `c()` actually aims at combining vectors.
+-   The reason why `c(1, 2, 3, 8, 9, 10)` produces a vector is that, in R, each number (or string, or logical) is, in itself, a vector of length 1.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+c(1, 2, 3, 8, 9, 10)
+[1]  1  2  3  8  9 10
+
+foo <- 1:3
+
+bar <- 8:10
+
+c(foo, bar)
+[1]  1  2  3  8  9 10
+
+class("hello")
+[1] "character"
+
+class(c("hello", "world"))
+[1] "character"
+```
+:::
+:::::
+
+## Operations in R {.smaller}
+
+::::: columns
+::: {.column width="30%"}
+[Arithmetic]{.mark}
+
+::: {style="font-size: .90em"}
+| Operator | Description                   |
+|----------|-------------------------------|
+| `x + y`  | Addition [(element-wise)]{.small-text}       |
+| `x - y`  | Subtraction [(element-wise)]{.small-text}    |
+| `x * y`  | Multiplication [(element-wise)]{.small-text} |
+| `x / y`  | Division [(element-wise)]{.small-text}       |
+| `x^y`    | Exponentiation [(element-wise)]{.small-text} |
+:::
+
+:::
+
+::: {.column .gutter-left width="30%"}
+[Relational]{.mark}
+
+::: {style="font-size: .90em"}
+| Operator     | Description                            |
+|--------------|----------------------------------------|
+| `x == y`     | Equal to                               |
+| `x != y`     | Not equal to                           |
+| `x < y`      | Less than                              |
+| `x <= y`     | Less than or equal to                  |
+| `x > y`      | Greater than                           |
+| `x >= y`     | Greater than or equal to               |
+| `x %in% foo` | Equal to any element in `foo` (vector) |
+:::
+
+:::
+
+::: {.column .gutter-left width="30%"}
+[Logical]{.mark}
+
+::: {style="font-size: .90em"}
+| Operator | Description        |
+|----------|--------------------|
+| `x & y`  | AND [(element-wise)]{.small-text} |
+| `x | y`  | OR [(element-wise)]{.small-text}  |
+| `!x`     | NOT [(element-wise)]{.small-text} |
+
+![](images/logical_operators.png)
+:::
+
+:::
+:::::
+
+## Arithmetic Operations (I)
+
+-   Arithmetic operations are performed on vectors. For example:
+
+``` r
+foo <- 1:3
+foo * 2
+[1] 2 4 6
+```
+
+## Arithmetic Operations (II) {.smaller}
+
+-   Given a vector `x`, they can return one value or a vector of values.
+    -   Examples of scalar operations:
+        -   `sum(x)` returns the sum of all elements in `x`.
+        -   `mean(x)` returns the average of all elements in `x`.
+        -   `min(x)` returns the minimum of all elements in `x`.
+    -   Examples of vectorized operations:
+        -   `sqrt(x)` returns the square root of each element in `x`.
+        -   `log(x)` returns the logarithm of each element in `x`.
+        -   `x + 2` adds `2` to each element in `x`.
+        -   `x + y` adds corresponding elements of vectors `x` and `y`.
+    -   In R, a single element is actually a vector of length 1 in itself. Therefore, operations on single elements are also vectorized. For example:
+        -   `sqrt(4)` returns `2`.
+        -   `log(1)` returns `0`.
+
+## Relational Operations
+
+-   Relational operations are performed on vectors, too. For example:
+
+``` r
+foo <- 1:3
+foo > 1
+[1] FALSE  TRUE  TRUE
+```
+
+## Logical Operations (I)
+
+-   Logical operations are performed on the results of relational operations and return logical vectors. For example:
+
+``` r
+foo > 1 & foo < 3
+[1] FALSE TRUE FALSE
+```
+
+-   Logical operations can be combined in chained expressions. For example:
+
+``` r
+!(foo > 1 & foo < 3)
+[1]  TRUE FALSE TRUE
+```
+
+## Logical Operations (II)
+
+-   You can use `which()` to create a vector with the position of the `TRUE` comparisons.
+
+``` r
+which(foo > 1)
+[1] 2 3
+```
+
+## Inspecting Vectors (I)
+
+-   To inspect an object is useful to understand the data before analyzing them
+    -   You will often work with data you didn't create yourself (e.g., a file that you downloaded from the national statistical office website).
+    -   Before you can analyze it, you must understand its "shape" and "contents".
+
+## Inspecting Vectors (II)
+
+-   There are a few R functions that are a sort of "X-ray vision" for your objects.
+    -   "What is this thing?" <br>
+        `str(<vector>)` gives a compact, one-line summary of any R object. It tells you the type, size, and a preview of the contents.
+    -   "What are the values like?" <br>
+        `summary(<vector>)` provides a statistical overview. For numbers, it gives min, max, mean, and quartiles. For factors, it gives frequency counts. Etc.
+    -   "How many items are in this vector?" <br>
+        `length(<vector>)` gives the number of elements in a vector.
+    -   "What type of data is this?"
+        `class(<vector>)`
+
+<!-- TODO Add inspetting data frame -->
+<!-- Include str(), head(), dim(), nrow(), and ncol() -->
+ 
+## Hands-on Tutorial
+
+-   It's time for another hands-on tutorial. Are you ready?! :fire:
+
+# Control-flow Structures and Functions in R
+
+## Control-flow Structures in R
+
+-   Control-flow structures allow you to control the flow of execution of a series of expressions.
+-   Common control structures are:
+    -   for-loop
+    -   if-then-else
+
+## The For-Loop Construct (I) {.smaller}
+
+-   A [for-loop]{.mark} is a programming language (imperative) construct for specifying iteration. Specifically, a for-loop functions by running a section of code repeatedly until it runs out of the elements of a vector.
+-   For-loops have two parts. The *header* declares the loop variable. The *body* is the code executed on each element of the loop variable (or, anyhow, once per iteration).
+
+```{mermaid}
+flowchart LR
+  A[Given a vector<br>**foo**] --> B{"For each<br>element, **foo_i**,<br>in **foo**"}
+  B --> C("Do something<br>on **foo_i**")
+  C --> B
+  B --> D[Exit the loop]
+```
+
+## The For-Loop Construct (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   A [for-loop]{.mark} is a programming language (imperative) construct for specifying iteration. Specifically, a for-loop functions by running a section of code repeatedly until it runs out of the elements of a vector.
+-   For-loops have two parts. The *header* declares the loop variable. The *body* is the code executed on each element of the loop variable (or, anyhow, once per iteration).
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+for (i in 1:10) {
+    print(i)
+}
+
+for (i in 1:10) {
+    if (i %% 2 == 0) {
+      print(i)
+    }
+}
+```
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Please note that you must explicitly print a value on the screen.
+The reason why is beyond the scope of this course, but it has to do with the fact that what is inside a for-loop is executed in a separate environment, different from the main one in which the for-loop in itself is executed.
+:::
+
+:::
+:::::
+
+## The For-Loop Construct (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   In most cases, instead of for-loops, you can use `lapply()` to perform the same task in a *declarative* manner. Later, we will discuss the `purrr` package that extends `lapply()` with additional features.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+# Create a list to store the means using an 'imperative' approach
+mean_lst <- list()
+for (col in names(mtcars)) {
+    mean_lst[[col]] <- mean(mtcars[, col])
+}
+mean_lst
+
+# Use lapply() to achieve the same result
+lapply(mtcars, mean)
+```
+:::
+:::::
+
+## The If-Then-Else Statement (I) {.smaller}
+
+-   Conditional statements (like the [if-then-else]{.mark} structure) are programming language (*imperative*) constructs that perform different actions depending on the value of a Boolean expression, called *condition*.
+
+```{mermaid}
+flowchart LR
+  A[value] --> B{"if <condition>"}
+  B -- TRUE --> C[then]
+  B -- FALSE --> D[else]
+```
+
+## The If-Then-Else Statement (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Conditional statements (like the [if-then-else]{.mark} structure) are programming language (*imperative*) constructs that perform different actions depending on the value of a Boolean expression, called *condition*.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+if (<condition>) {
+    ## do something
+} 
+## Continue with rest of code
+
+if (<condition>) {
+    ## do something
+} else {
+    ## do something else
+}
+## Continue with rest of code
+
+if (<condition1>) {
+    ## do something
+} else if (<condition2>) {
+    ## do something different
+} else {
+    ## do this
+}
+## Continue with rest of code
+```
+:::
+:::::
+
+## The If-Then-Else Statement (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   The `ifelse()` function combines (*declaratively*) a *for-loop* (or a `lapply()` if you want) and an *if-then-else* structure. It runs a conditional statement on each element of a vector and performs different actions (on the element itself) depending on the result of the statement.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+set.seed(4099)
+foo <- rnorm(n = 10)
+bar <- ifelse(foo >= 0, "pos", "neg")
+
+bar
+[1] "pos" "pos" "pos" "neg" "pos" "neg" ...
+
+baz <- ifelse(foo >= 0, foo + 1, foo - 1)
+
+baz
+[1]  2.968875  1.654288  1.305423  ...
+```
+:::
+:::::
+
+## Functions in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Functions are often used to encapsulate a sequence of expressions that need to be executed numerous times.
+-   Functions provide an abstraction of the code to potential users. This abstraction simplifies the users' lives because it relieves them from having to know every detail of how the code operates. In addition, the creation of an interface allows the developer to communicate to the user the aspects of the code that are most relevant.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+say_hello <- function(first, last = NULL) {
+    full <- paste0(c(first, last), collapse = " ")
+    greetings <- paste0("Hello, ", full, "!")
+    return(greetings)
+}
+
+say_hello("John", "Doe")
+[1] "Hello, John Doe!"
+
+say_hello("Carlo")
+[1] "Hello, Carlo!"
+```
+:::
+:::::
+
+## Functions in R (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   The command `function()` creates a function that is assigned to an object that you can use to call the function
+-   The parameters of `function(<arg>)` are the function's *arguments*. A function can have no or multiple arguments. Each argument can have a default value that will be used if not specified otherwise
+-   You can use `return(<value>)` to specify which value the function will return. If not differently specified, the last value will be returned
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+say_hello <- function(first, last = NULL) {
+    full <- paste0(c(first, last), collapse = " ")
+    greetings <- paste0("Hello, ", full, "!")
+    return(greetings)
+}
+
+say_hello("John", "Doe")
+[1] "Hello, John Doe!"
+
+say_hello("Carlo")
+[1] "Hello, Carlo!"
+```
+:::
+:::::
+
+## Functions in R (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can use functions inside of other functions.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+full_name <- function(first, last = NULL) {
+    full <- paste0(c(first, last), collapse = " ")
+    return(full)
+}
+
+say_hello <- function(first, last = NULL) {
+    full <- full_name(first, last)
+    greetings <- paste0("Hello, ", full, "!")
+    return(greetings)
+}
+```
+:::
+:::::
+
+## Functions in R (IV) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Since R 4.1.0, it has been introduced a shorthand for `function(<var>)`: i.e., `\(<var>)`.
+-   This shorthand is particularly useful for declaring *anonymous functions*.
+-   Anonymous functions can be used "on the fly" without assigning them to an object (so they don't actually have a name, and you cannot call them again later on).
+-   You will be able to appreciate the use of anonymous functions when we discuss the idea of functionals later in the course.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+c("John", "Carlo") |>
+    lapply(
+        \(name) paste0("Hello, ", name, "!")
+    )
+[[1]]
+[1] "Hello, John!"
+
+[[2]]
+[1] "Hello, Carlo!"
+```
+:::
+:::::
+
+## Objects in R (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Everything in R is an object.
+-   Each object has a *class* and some *attributes*.
+-   The same function applied to objects of different classes can behave differently.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+num_vct <- c(1, 1, 2, 3)
+
+summary(num_vct)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    1.00    1.50    1.75    2.25    3.00
+
+fct_vct <- factor(num_vct)
+
+summary(fct_vct)
+1 2 3 
+2 1 1
+
+attributes(fct_vct)
+$levels
+[1] "1" "2" "3"
+
+$class
+[1] "factor"
+
+levels(fct_vct)
+[1] "1" "2" "3"
+```
+:::
+:::::
+
+## Objects in R (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Objects also help understanding better the data structures introduced earlier and the logic of R, more in general.
+    -   E.g., a `data.frame` is just a list with row names.
+    -   The reason why a `data.frame` is printed differently than a `list` is because actually there exists a function called `print.data.frame()` that is automatically used when you call `print()` on an object of class `data.frame`.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+foo <- list(a = 1:3, b = 8:10)
+
+print(foo)
+$a
+[1] 1 2 3
+
+$b
+[1]  8  9 10
+
+attr(foo, "row.names") <- 1:3
+
+attr(foo, "class") <- "data.frame"
+
+print(foo)
+  a  b
+1 1  8
+2 2  9
+3 3 10
+```
+:::
+:::::
+
+## Hands-on Tutorial
+
+-   Here is a third hands-on tutorial. Ready?! Steady?! Go! :checkered_flag:
+
+# Basic R Functions and Extraction Functions
+
+## Basic R Functions (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R has some shell-like functions. For example:
+    -   You can list the objects in the working environment with `ls()`
+    -   You can remove an object from the working environment with `rm(<object>)`
+    -   You can get the working directory with `getwd()` and set it with `setwd(file.path("path", "to", "dir"))`, where `file.path()` lets you compose a path to a directory or a file in OS-independently
+    -   You can list all the files or directories in the working directory with `list.files()` and `list.dirs()`
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+num_vct <- c(1, 1, 2, 3)
+
+ls()
+[1] "num_vct"
+
+rm(num_vct)
+
+ls()
+character(0)
+
+getwd()
+[1] "C:/Users/user/Documents"
+```
+:::
+:::::
+
+## Basic R Functions (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   The `print()` function mostly just prints its argument (so, nothing different than calling the object itself). However, it comes in useful within loops or when you write a script to be executed not interactively.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+num_vct <- c(1, 1, 2, 3)
+
+print(num_vct)
+[1] 1 1 2 3
+
+for (i in 1:2) {
+    num_vct
+}
+
+for (i in 1:2) {
+    print(num_vct)
+}
+[1] 1 1 2 3
+[1] 1 1 2 3
+```
+:::
+:::::
+
+## Basic R Functions (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   The `length()`, `nrow()`, `ncol()`, and `dim()` functions return the number of elements of a 1D data structure, the number of rows/columns, or the dimension of an 2D/nD data structure.
+-   The `colnames()` and `rownames()` print the columns/rows names of a 2D data structure, while `names()` prints the names of a 1D data structure.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+num_vct <- c(1, 1, 2, 3)
+
+length(num_vct)
+[1] 4
+
+df <- data.frame(
+    x = num_vct,
+    y = fct_vct
+)
+
+nrow(df)
+[1] 4
+
+dim(df)
+[1] 4 2
+
+colnames(df)
+[1] "x" "y"
+```
+:::
+:::::
+
+## Extract Functions (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can use `[` to extract a given element or a range of elements based on their index of homogeneous data structures.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+num_vct <- c(1, 1, 2, 3)
+
+num_vct[3]
+[1] 2
+
+num_vct[2:3]
+[1] 1 2
+
+mtx <- matrix(1:6, nrow = 3)
+
+mtx[3]
+3
+```
+:::
+:::::
+
+------
+
+::: {.v-center-container}
+![](images/extract_element.png){width="90%"}
+:::
+
+------
+
+::: {.v-center-container}
+![](images/subset_vector.png){width="90%"}
+:::
+
+## Extract Functions (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   For heterogeneous data structures the situation is more complicated.
+    -   `[` extracts an object or a range of objects based on their index.
+    -   `[[` extracts the values of the same object.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+df <- data.frame(
+    x = num_vct,
+    y = fct_vct
+)
+
+df[1]
+  x
+1 1
+2 1
+3 2
+4 3
+
+df[[1]]
+[1] 1 1 2 3
+
+lst <- list(x = num_vct, y = fct_vct)
+
+lst[1]
+$x
+[1] 1 1 2 3
+```
+:::
+:::::
+
+## Extract Functions (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   For named data structures, you can select columns also using `$` (it is equivalent to `foo[, "name"]`).
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+df <- data.frame(
+   x = num_vct,
+    y = fct_vct
+)
+
+df$x
+[1] 1 1 2 3
+```
+:::
+:::::
+
+## Extract Functions (IV) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   For 2D/nD data structures, `[` can be used to extract only a slice of the object if you use more than one argument.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+df <- data.frame(
+    x = num_vct,
+    y = fct_vct
+)
+
+df[, 1]
+[1] 1 1 2 3
+
+df[1, ]
+  x y
+1 1 1
+
+df[1, 1]
+[1] 1
+```
+:::
+:::::
+
+## Extract Functions (IV) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   You can also subset objects using comparison and logical operations
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+df <- data.frame(
+    x = num_vct,
+    y = fct_vct
+)
+
+df[df[, 1] == 2, ]
+  x y
+3 2 2
+```
+:::
+:::::
+
+## Hands-on Tutorial
+
+-   We are ready for the last hands-on tutorial of this class :postal_horn:
+
+# Special Data Types
+
+## Missing Values (I)
+
+-   In statistics, missing values occur when no data value is stored for the variable in an observation.
+-   Data often are missing in social sciences because governments or private entities choose not to, or fail to, report critical statistics, or because the information is not available.
+-   You must pay some attention to the missing values in general. But they are particularly critical when missing not at random, because they will strongly affect the conclusions of your study.
+
+## Missing Values (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   In R there is a special data type for *missing values*: `NA`.
+-   You can use the `is.na()` function to check for missing values.
+-   It is important to handle missing values appropriately, as they can affect the results of your analysis.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+class(TRUE)
+[1] "logical"
+
+class(NA)
+[1] "logical"
+
+2 > 1
+[1] TRUE
+
+2 > 1 & 3 > 2
+[1] TRUE
+
+2 > 1 & 3 > 4
+[1] FALSE
+
+2 > 1 & 3 > NA
+[1] NA
+
+2 > 1 | 3 > 4
+[1] TRUE
+
+2 > 1 | 3 > NA
+[1] TRUE
+```
+:::
+:::::
+
+## Missing Values (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   R is very serious about the lack of information.
+-   Stated differently, in R the NAs are "contagious": almost any operation involving even just one unknown value (`NA`) will be evaluated (i.e., will return) as "unknown".
+-   If you want to determine if a value is missing, use `is.na()`.
+    -   Within many functions, you can exclude the missing values by specifying `na.rm = TRUE`.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+class(2)
+[1] "numeric"
+
+class(NA)
+[1] "logical"
+
+sum(c(2, NA))
+[1] NA
+
+sum(c(2, NA), na.rm = TRUE)
+[1] 2
+
+class("hello")
+[1] "character"
+
+"hello" == NA
+[1] NA
+
+is.na("hello")
+FALSE
+
+is.na(NA)
+TRUE
+```
+:::
+:::::
+
+## Strings (I)
+
+-   Strings play a major role in many data cleaning and preparation tasks.
+
+## Strings (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Among other things, you can:
+    -   Detect matches with `grep()`.
+    -   Subset strings with `substr()`.
+    -   Mutate strings with `sub()`, `tolower()`, etc.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+fruit[grep("^a", fruit)]
+[1] "apple"  "apricot"  "avocado"
+
+> fruit[grep("^[aeiou]", fruit)]
+[1] "apple"  "apricot"  "avocado"  "eggplant" ...
+
+> empl <- read.csv("empl_2023.csv")
+
+> empl$nace_1d <-
+    substr(empl$nace_r2_code, 1, 1)
+
+> empl$geo_label <-
+    sub(" \\(from 2020\\)$", "", empl$geo_label)
+
+> empl$geo_label <-
+    tolower(empl$geo_label)
+```
+:::
+:::::
+
+## Factors (I)
+
+-   R uses factors to handle categorical variables, variables that have a fixed and known set of possible values.
+-   To treat a variable as a factor, instead of as a string, is key in several more advanced statistical models. For example, if you run a regression model with some fixed effects, the variable must be a factor (maybe it will be internally transformed into it) and you should remember that one of the classes (the first, by default in R) will be excluded for collinearity.
+
+## Factors (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   If R knows that a variable is a factor, several functions will treat it properly.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+summary(empl$nace_r2_code)
+   Length     Class      Mode 
+     2411 character character
+
+empl$nace_r2_code <-
+    factor(empl$nace_r2_code)
+
+summary(empl$nace_r2_code)
+  A01   A02   A03   B05   B06   B07   B08   ...
+   28    27    27    12    21    17    28   ...
+```
+:::
+:::::
+
+## Dates (I)
+
+-   Sometimes, while cleaning and preparing your data, you'll have to do with dates (like the date on which some event happened).
+-   To transform a character into a proper `Date` object can help for several reasons.
+
+## Dates (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   When you transform a string into a date, you can specify the format of the raw data.
+-   R knows how to use dates, e.g., you can compare them.
+-   You can easily extract parts of a date, like the year.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+dates <- c("01/03/2023", "28/02/2024")
+
+dates <- as.Date(dates, format = "%d/%m/%Y")
+
+dates[1] < dates[2]
+[1] TRUE
+
+years <- as.numeric(format(dates, "%Y"))
+
+years
+[1] 2023 2024
+```
+:::
+:::::
+
+# Functional Programming
+
+## Functional Programming
+
+-   R is a *functional programming* language.
+-   This means that R is prone to a problem-solving style centered on functions.
+-   As typical of functional languages, you can have *functionals* in R.
+    -   A functional is a function that takes a function as input and returns a vector (or another data structure) as output.
+
+## Functionals (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Let's clarify the idea of a functional with an example.
+    -   `lapply()` is a function that replaces a *for-loop* block and is an example of a functional:
+        -   You pass some functions as arguments (e.g., `is.numeric()` or `mean()`).
+        -   It applies the function to each element of the vector (or list).
+        -   It returns the resulting list.
+-   `sapply()` is equivalent to `lapply()` but it returns a vector or a matrix.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+lapply(iris, is.numeric)
+$Sepal.Length
+[1] TRUE
+
+$Sepal.Width
+[1] TRUE
+
+...
+
+sapply(iris, is.numeric)
+Sepal.Length  Sepal.Width Petal.Length ...
+        TRUE         TRUE         TRUE ...
+
+sapply(iris, mean)
+Sepal.Length  Sepal.Width Petal.Length  ...
+    5.843333     3.057333     3.758000  ...
+```
+:::
+:::::
+
+## Functionals (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   There are several reasons why you should use them instead of a for-loop:
+    -   It is much more efficient because it knows how to use the memory of your computer as best
+    -   It is more concise and clearer to read
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+col_isnumeric <- list()
+
+for (col in 1:ncol(iris)) {
+    col_isnumeric[[col]] <-
+        is.numeric(iris[[col]])
+}
+
+names(col_isnumeric) <- colnames(iris)
+
+> col_isnumeric
+$Sepal.Length
+[1] TRUE
+
+$Sepal.Width
+[1] TRUE
+
+...
+```
+:::
+:::::
+
+## The purrr Package (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   `purrr::map()` is essentially identical to `lapply()` already available in base R. However, the package offers a few additional functionalities.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+purrr::map(
+    iris,
+    \(col) is.numeric(col)
+)
+$Sepal.Length
+[1] TRUE
+
+$Sepal.Width
+[1] TRUE
+
+$Petal.Length
+[1] TRUE
+
+...
+```
+:::
+:::::
+
+## The purrr Package (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   `purrr::map()` is essentially identical to `lapply()` already available in base R. However, the package offers a few additional functionalities.
+-   `map()` returns a list, but there are four more specific variants: `map_lgl()`, `map_int()`, `map_dbl()`, and `map_chr()`. Each returns an atomic vector of the specified type.
+:::
+
+::: {.column .gutter-left width="48%"}
+``` r
+purrr::map_int(
+    1:3,
+    \(val) val^2
+)
+[1] 1 4 9
+
+purrr::map_dbl(
+    1:3,
+    \(val) val + 0.1
+)
+[1] 1.1 2.1 3.1
+
+purrr::map_lgl(
+    1:3,
+    \(val) val > 1
+)
+[1] FALSE  TRUE  TRUE
+
+purrr::map_chr(
+    mtcars,
+    class
+)
+      mpg       cyl      disp        hp
+"numeric" "numeric" "numeric" "numeric"
+...
+```
+:::
+:::::
+
+# Appendix
+
+## References
+
+::: {style="font-size: .85em"}
+-   Introductory materials:
+    -   Adler (2012) *R in a Nutshell (2e).* O'Reilly.
+    -   Grolemund (2014) *Hands-On Programming with R.* O'Reilly.<br> <https://rstudio-education.github.io/hopr/>
+    -   Peng (2022) *R Programming for Data Science.*<br> <https://bookdown.org/rdpeng/rprogdatascience/>
+-   More advanced materials:
+    -   Grolemund and Wickham (2017) *R for Data Science (2e).* O'Reilly.<br> <https://r4ds.had.co.nz/>
+    -   Gagolewski (2024) *Deep R Programming.*<br> <https://deepr.gagolewski.com/>
+    -   Wilke (2019) *Fundamentals of Data Visualization.* O'Reilly.<br> <https://clauswilke.com/dataviz/>
+
+<!-- *An Introduction to R* <cran.r-project.org/doc/manuals/R-intro.html> -->
+<!-- N.D. Phillips (2024) *YaRrr! The Pirate's Guide to R* <bookdown.org/ndphillips/YaRrr/> -->
+
+:::

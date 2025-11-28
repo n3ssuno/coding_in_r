@@ -1,0 +1,55 @@
+/*-- scss:rules --*/
+
+/* Highlighted text */
+.reveal mark {
+  background-color: #bea2c2;
+}
+
+/* Apply a left margin to the second column to fill the gap */
+.reveal .gutter-left {
+  /* Pushes the second column to the right, creating the 4% gap */
+  margin-left: 4%; 
+}
+
+ul li ul li {
+  font-size: 0.75em;
+}
+
+ul li dl dt {
+  font-size: 0.75em;
+}
+
+ul li dl dd {
+  font-size: 0.65em;
+}
+
+.small-text {
+  font-size: .75em;
+}
+
+.tiny-text {
+  font-size: .50em;
+}
+
+.reveal pre.sourceCode code {
+  max-height: 550px !important;
+}
+
+.v-center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90%;
+}
+
+.small-table {
+  font-size: .75em;
+}
+
+.tiny-table {
+  font-size: .50em;
+}
+
+.code-fold {
+  font-size: .50em;
+}

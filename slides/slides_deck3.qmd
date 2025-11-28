@@ -1,0 +1,1645 @@
+---
+title: "Coding in R"
+subtitle: "Deck 3 &bull; Data Visualization in R"
+date: "2024-11-19"
+date-format: "long"
+author: "Carlo Bottai"
+institute: "Postdoctoral Fellow <br> Department of Economics, Management, and Statistics (DEMS) <br> University of Milano-Bicocca"
+toc: true
+toc-depth: 1
+from: markdown+emoji
+format:
+ revealjs:
+   theme: [serif, files/custom.scss]
+   slide-number: true
+   aspect-ratio: "16:9"
+   progress: true
+   min-scale: 1
+   max-scale: 1
+   width: 1150
+   lightbox: true
+   pdf-max-pages-per-slide: 1
+---
+
+# Data Visualization
+
+```{r}
+#| label: setup
+#| echo: false
+knitr::knit_hooks$set(
+    bg_slides = \(before, options, envir) {
+        if (before) {
+            par(
+                fg = "black",
+                bg = "#f0f1eb"
+            )
+        }
+    }
+)
+midwest <-
+    read.csv(
+        file.path("..", "data", "midwest.csv"),
+        colClasses = c(
+            state = "factor",
+            inmetro = "factor"
+        )
+    )
+midwest_micro <-
+    subset(
+        midwest,
+        inmetro == 0
+    )
+population_per_state <-
+    aggregate(
+        poptotal ~ state,
+        data = midwest,
+        FUN = sum
+    )
+```
+
+
+
+## Data Visualization
+
+-   Data visualization ("data viz") deals with the graphic representation of data.
+-   It is a particularly efficient way of communicating when the data is numerous.
+
+## Data Visualization and Human Perception
+
+-   Our visual perception (what we see) is extremely fast and efficient.
+-   However, to be fast it exploits several approximations and simplifications.
+-   Therefore, we can be easily misled by "the first impression".
+
+## Data Visualization and Human Perception {.center}
+
+How much time does it take to read this information?
+
+::::: {.columns}
+::: {.column width="48%"}
+::: {.fragment .small-text}
+[This is more precise]{.mark}
+:::
+```{r}
+dta <-
+    WDI::WDI(
+        indicator = "NY.GDP.PCAP.KD",
+        country = c("DE", "FR", "GB"),
+        start = 1980,
+        end = 2000
+    )
+
+dta <-
+    dta |>
+    transform(
+        gdp_pc_th = NY.GDP.PCAP.KD / 1000
+    )
+
+dta |>
+    subset(
+        subset = year %% 5 == 0 & year < 2000,
+        select = c("country", "year", "gdp_pc_th")
+    ) |>
+    (
+        \(data) data[order(data$country, data$year), ]
+    )() |>
+    knitr::kable(
+        format = "html",
+        row.names = FALSE,
+        col.names = c("Country", "Year", "GDP pc (th)"),
+        table.attr = 'class="tiny-table"'
+    )
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+::: {.fragment .small-text}
+[This is quicker]{.mark}
+:::
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-width: 8
+#| fig-height: 8
+dta_plt <-
+    dta |>
+    subset(
+        subset = year %% 5 == 0 & year < 2000,
+        select = c("country", "iso2c", "year", "gdp_pc_th")
+    ) |>
+    (
+        \(data) data[order(data$country, data$year), ]
+    )()
+par(bg = "#f0f1eb")
+plot.new()
+grid(
+    nx = NULL, ny = NULL,
+    lty = 2, col = "gray", lwd = 0.5
+)
+par(new = TRUE)
+with(
+    dta_plt,
+    plot(
+        gdp_pc_th ~ year,
+        xlab = "Year", ylab = "GDP pc (th)"
+    )
+)
+colors <-
+    function(cty) {
+        switch(
+            cty,
+            DE = 2,
+            FR = 3,
+            GB = 4
+        )
+    }
+lns <-
+    lapply(
+        unique(dta_plt$iso2c),
+        \(cty) {
+            with(
+                subset(dta_plt, iso2c == cty),
+                {
+                    lines(
+                        gdp_pc_th ~ year,
+                        col = colors(cty), lwd = 2
+                    )
+                    points(
+                        gdp_pc_th ~ year,
+                        col = colors(cty), pch = 19, cex = 2
+                    )
+                }
+            )
+        }
+    )
+legend(
+    "topleft",
+    inset = c(.025, .05),
+    legend = c("Germany", "France", "UK"),
+    col = c(2, 3, 4), pch = 19, cex = 1.5
+)
+```
+:::
+:::::
+
+# Data Visualization in R
+
+## Which Visualization to Choose?
+
+::::: {.columns}
+::: {.column width="50%"}
+-   The choice depends on many things. Two are key:
+    -   [How many]{.mark} variables do you want to map into the visualization.
+        -   *Example:* In this case, you have two variables ("PID" is the unique ID of the observation, so it is not a variable).
+    -   [Which kind]{.mark} of variables do you want to map into the visualization.
+        -   *Example:* In this case, one variable is categorical ("state") and one is numerical ("poptotal").
+:::
+
+::: {.column .gutter-left width="46%"}
+```{r}
+#| echo: false
+#| tbl-format: revealjs
+set.seed(2099)
+midwest |>
+    subset(
+        select = c("PID", "state", "poptotal")
+    ) |>
+    (
+        \(data) data[sample(x = nrow(data), size = 10), ]
+    )() |>
+    knitr::kable(
+        format = "html",
+        row.names = FALSE,
+        table.attr = 'class="small-table"'
+    )
+```
+:::
+:::::
+
+------
+
+```{r}
+#| fig-width: 12
+#| fig-height: 8
+#| fig-align: center
+#| out-width: 110%
+#| out-height: 110%
+#| echo: false
+#| message: false
+#| warning: false
+par(
+    mfrow = c(3, 2),
+    oma = c(3, 3, 3, 3),
+    mar = c(3, 3, 2, 1),
+    bg = "#f0f1eb",
+    pty = "s"
+)
+with(
+    midwest_micro,
+    hist(
+        poptotal,
+        main = "Histogram Chart"
+    )
+)
+with(
+    midwest_micro,
+    plot(
+        popdensity ~ poptotal,
+        main = "Scatter Plot"
+    )
+)
+plot.new()
+with(
+    population_per_state,
+    barplot(
+        poptotal ~ state,
+        main = "Column Chart"
+    )
+)
+with(
+    population_per_state,
+    barplot(
+        poptotal ~ state,
+        main = "Bar Chart"
+    )
+)
+with(
+    midwest,
+    plot(
+        ~ state + inmetro,
+        main = "Stacked Column Chart"
+    )
+)
+mtext(
+    "One-Variable Plots",
+    side = 3, line = 1, at = 0.25, outer = TRUE,
+    cex = 1.3, font = 2
+)
+mtext(
+    "Two-Variables Plots",
+    side = 3, line = 1, at = 0.75, outer = TRUE,
+    cex = 1.3, font = 2
+)
+mtext(
+    "Numerical Only",
+    side = 2, line = 1, at = 5/6, outer = TRUE,
+    cex = 1.3, font = 2
+)
+mtext(
+    "Mixed Type",
+    side = 2, line = 1, at = 3/6, outer = TRUE,
+    cex = 1.3, font = 2
+)
+mtext(
+    "Categorical Only",
+    side = 2, line = 1, at = 1/6, outer = TRUE,
+    cex = 1.3, font = 2
+)
+```
+
+## Data Sets Used in the Slides (I) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   For the examples in the following slides, we will use a few datasets.
+-   If not differently specified, they are already present in R.
+:::
+
+::: {.column .gutter-left width="48%"}
+
+:::
+:::::
+
+## Data Sets Used in the Slides (II) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   An exception is the `midwest` dataset. To import it, download the CSV file from the 
+    e-learning page and run the code on the left.
+
+::: {.callout-note style="font-size: .75em;"}
+The `midwest` dataset actually comes from the `ggplot2` package. Therefore, an alternative
+is to install this last package and import the dataset with
+```r
+data(midwest, package = "ggplot2")`
+```
+In this case, you must transform some of its variables into factors with
+```r
+midwest <-
+  transform(
+    midwest,
+    state = factor(state),
+    inmetro = factor(inmetro)
+  )
+```
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```r
+# Read the midwest dataset from file
+midwest <-
+    read.csv(
+        "midwest.csv",
+        colClasses = c(
+            state = "factor",
+            inmetro = "factor"
+        )
+    )
+
+# Filter the data to include only the counties
+#   that are NOT part of a metro area
+midwest_micro <-
+    subset(
+        midwest,
+        inmetro == 0
+    )
+
+# Compute the total population per state
+population_per_state <-
+    aggregate(
+        poptotal ~ state,
+        data = midwest,
+        FUN = sum
+    )
+```
+:::
+:::::
+
+## Data Sets Used in the Slides (III) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `midwest` data set contains (among others) the following columns:
+    -   `county`: US county name.
+    -   `state`: US State to which county belongs to.
+    -   `poptotal`: Total population of the county.
+    -   `popdensity`: Population density of the county (person / area).
+    -   `inmetro`: equal to 1 if the county belongs to a metropolitan area, and 0 otherwise.
+:::
+
+::: {.column .gutter-left width="48%"}
+```r
+# Read the midwest dataset from file
+midwest <-
+    read.csv(
+        "midwest.csv",
+        colClasses = c(
+            state = "factor",
+            inmetro = "factor"
+        )
+    )
+
+# Filter the data to include only the counties
+#   that are NOT part of a metro area
+midwest_micro <-
+    subset(
+        midwest,
+        inmetro == 0
+    )
+
+# Compute the total population per state
+population_per_state <-
+    aggregate(
+        poptotal ~ state,
+        data = midwest,
+        FUN = sum
+    )
+```
+:::
+:::::
+
+## Data Sets Used in the Slides (IV) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `midwest_micro` data frame contains information only about those counties not part of a metropolitan area.
+-   The `population_per_state` data frame contains a column with the state name and one with the corresponding total population.
+:::
+
+::: {.column .gutter-left width="48%"}
+```r
+# Read the midwest dataset from file
+midwest <-
+    read.csv(
+        "midwest.csv",
+        colClasses = c(
+            state = "factor",
+            inmetro = "factor"
+        )
+    )
+
+# Filter the data to include only the counties
+#   that are NOT part of a metro area
+midwest_micro <-
+    subset(
+        midwest,
+        inmetro == 0
+    )
+
+# Compute the total population per state
+population_per_state <-
+    aggregate(
+        poptotal ~ state,
+        data = midwest,
+        FUN = sum
+    )
+```
+:::
+:::::
+
+## Functions (I)
+
+-   In R, there is a special type of object called ["formula"]{.mark}.
+    -   Formulas are, in R, the standard language for expressing [relationships between variables]{.mark}.
+    -   They allow you to specify which variables are [dependent]{.mark} and which are [independent]{.mark}.
+
+## Functions (II)
+
+-   Formulas can be declared with `LHS ~ RHS`.
+    -   The LHS is the dependent variable (or outcome).
+    -   The RHS is a list (combined with a `+` symbol) of independent variables (or predictors).
+    -   The `~` (tilde) symbol identify a relationship among them.
+    -   Examples of valid formulas are `y ~ x1 + x2`,  `y ~ x1 - log(x2)`,  or `~ x`.
+
+## Functions (III)
+
+-   Formulas can be used in several occasions in R, whenever a relationship between variables comes useful.
+    -   A typical case are linear regression models. <br> `lm(y ~ x1 + x2, data = <data.frame>)`
+    -   Charts and plots are another case where you represent a relationship between variables. And, therefore, where formulas can be used.
+        -   `foo ~ bar` specifies that you want to plot the variable `foo` on the *y*-axis and `bar` on the *x*-axis.
+        -   `~ foo` specifies that you want to plot the distribution of the variable `foo`.
+        -   `~ foo + bar` specifies that you want to plot the joint distribution of `foo` and `bar`.
+
+# Two-Variables Plots
+
+## Two-Variables Plots
+
+-   Two-variables plots are useful to describe the [relationship]{.mark} (*dependence*) between two variables.
+
+## Column Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `barplot()` function can be used to draw [column chart]{.mark}.
+    -   Column charts can be used for displaying the relationship between [two variables, one numerical and one categorical]{.mark}.
+    -   Note that, in the `barplot()`, each row should represents a distinct "observation".
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Please note that we will later introduce another visualization that we will call "bar chart". Column charts and bar charts are sometimes used as synonyms and show very similar. However, they are different in nature, because of what is represented on the vertical axis. This is why we will follow the R's `ggplot2` package convention and use "column chart" here and "bar chart" in the other case.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-column-chart
+#| fig-cap: "Population level per US midwest state."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    population_per_state,
+    barplot(
+        poptotal ~ state
+    )
+)
+```
+:::
+:::::
+
+## Scatter Plot {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `plot()` function can be used to draw a [scatter plot]{.mark}.
+    -   Scatter plots can be used for displaying the relationship between [two numerical variables]{.mark}.
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-scatter-plot
+#| fig-cap: "Population level and population density in each micropolitan area of the US midwest state."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest_micro,
+    plot(
+        popdensity ~ poptotal
+    )
+)
+```
+:::
+:::::
+
+## Stacked Column Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `plot()` function can be used to draw a [stacked column chart]{.mark}.
+    -   Stacked column charts can be used for displaying the relationship between [two categorical variables]{.mark}.
+    -   You must have:
+        -   Two variable.
+        -   Both variables must be factors (i.e., categorical).
+        -   Both variables must stay on the RHS of the formula.
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-stacked-column-chart
+#| fig-cap: "Fraction of counties in each US midwest state that are part of a metro area or not."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest,
+    plot(
+        ~ state + inmetro
+    )
+)
+```
+:::
+:::::
+
+# One-Variable Plots
+
+## One-Variable Plots
+
+-   One-variable plots are useful to describe the [distribution]{.mark} of a variable.
+
+## Bar Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `plot()` function can be used to draws a [bar chart]{.mark}.
+    -   Bar charts can be used to visualize the distribution of a [categorical variable]{.mark}.
+    -   The height of the bar represents the number of cases in each group.
+    -   To do so, use a formula with the variable of interest on the RHS
+    -   Please, note that the variable must be a factor
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-bar-chart
+#| fig-cap: "Fraction of counties in each of the US midwest states."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest,
+    plot(
+        ~ state,
+    )
+)
+```
+:::
+:::::
+
+## Histogram Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `hist()` function can be used to draw a [histogram]{.mark}.
+    -  Histograms can be used for visualizing the distribution of a [numerical variable]{.mark}.
+    -  The x-axis is divided into bins and we represent the number of observations included in each bin.
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Please note that `hist()` is an exception w.r.t. the other cases, since you cannot use a formula to specify the variable of interest.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-histogram
+#| fig-cap: "Distribution of population size of US midwest counties that are not part of a metro area."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest_micro,
+    hist(
+        poptotal, main = ""
+    )
+)
+```
+:::
+:::::
+
+## Histogram Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `hist()` function can be used to draw a [histogram]{.mark}.
+    -  Histograms can be used for visualizing the distribution of a [numerical variable]{.mark}.
+    -  The x-axis is divided into bins and we represent the number of observations included in each bin.
+    -  You can vary the number of bins into which the displayed variable is cut, by using the `breaks` argument of the `hist()` function.
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Please note that `hist()` is an exception w.r.t. the other cases, since you cannot use a formula to specify the variable of interest.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-histogram_breaks
+#| fig-cap: "Distribution of population size of US midwest counties that are not part of a metro area."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest_micro,
+    hist(
+        poptotal, breaks = 30, main = ""
+    )
+)
+```
+:::
+:::::
+
+
+## Histogram Chart {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `hist()` function can be used to draw a [histogram]{.mark}.
+    -  Histograms can be used for visualizing the distribution of a [numerical variable]{.mark}.
+    -  The x-axis is divided into bins and we represent the number of observations included in each bin.
+    -  You can vary the number of bins into which the displayed variable is cut, by using the `breaks = <n_bins>` argument.
+    -   You can represent relative frequencies (*density*) on the *y*-axis instead of counts, by using the `freq = FALSE` argument.
+
+::: {.callout-note style="padding-top: 2em; font-size: .75em;"}
+Please note that `hist()` is an exception w.r.t. the other cases, since you cannot use a formula to specify the variable of interest.
+:::
+
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-histogram_freq
+#| fig-cap: "Distribution of population size of US midwest counties that are not part of a metro area."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest_micro,
+    hist(
+        poptotal, freq = FALSE, main = ""
+    )
+)
+```
+:::
+:::::
+
+## Density Plot {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   Density plots are another way of visualizing the distribution of a numerical variable, alternative to histogram charts.
+    -   Compared with histograms they provide a smoother representation of the distribution and approximate a (continuous) probability density function (PDF).
+    -   The `density()` function computes kernel density estimates for univariate observations.
+    -   The `plot()`, applied on a density estimate (i.e., the output of `density()`), draws a smoothed version of a histogram.
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-density-plot
+#| fig-cap: "Distribution of population size of US midwest counties that are not part of a metro area."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest_micro,
+    plot(
+        density(poptotal), main = ""
+    )
+)
+```
+:::
+:::::
+
+## Box Plot {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   The `boxplot()` function can be used to draw a box plot.
+    -   Box plots can be used for compactly displaying the distribution of a [numerical variable]{.mark} (eventually, [grouped by a categorical variable]{.mark}).
+    -   Therefore, they are another alternative to a histogram chart. Compared to histograms, they provide a syntetic representation of the distribution. Therefore, they are better at comparing distributions across groups.
+
+::: {.callout-note style="padding-top: .5em; font-size: .75em;"}
+Alternatively, you can also use
+```r
+with(
+    midwest,
+    boxplot(
+        log(poptotal) ~ inmetro
+    )
+)
+```
+:::
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: fig-box-plot
+#| fig-cap: "Distr. of pop. size (log scale) of US midwest counties within (1) and outside (0) a metro area."
+#| fig-width: 4
+#| fig-height: 4
+#| warning: false
+#| echo: true
+#| bg_slides: true
+with(
+    midwest,
+    plot(
+        log(poptotal) ~ inmetro
+    )
+)
+```
+:::
+:::::
+
+------
+
+::: {.center}
+![](images/box-plot-annotated.png){height="700px"}
+:::
+
+# Multi-Variable Plots
+
+## Multi-Variable Plots
+
+-   You can overlay multiple data series in the same chart.
+    -   E.g., you can use points of different colors or shapes in the same scatterplot to compare several groups of data.
+-   Alternatively, you can use multiple panels (aka *facets*) to do the comparison.
+    -   This last method is cleaner, but the comparison is less immediate.
+
+## Common Data Visualization Aesthetics {.center}
+
+![*Source:* C.O. Wilke (2019) *Fundamentals of Data Visualization*, O'Reilly](images/data_viz_aesthetics.png){height="500px"}
+
+------
+
+::::: columns
+::: {.column width="48%"}
+```{r}
+#| label: colors-plot-output
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-show: asis
+#| fig-width: 6
+#| fig-height: 6
+#| code-fold: true
+#| code-summary: "expand for full code"
+par(bg = "#f0f1eb")
+
+midwest_micro_splt <-
+    split(
+        midwest_micro,
+        midwest_micro$state
+    )
+
+states <-
+    unique(midwest_micro$state)
+
+clrs <-
+    hcl.colors(
+        length(states),
+        palette = "Dark 3"
+    )
+names(clrs) <-
+    states
+
+with(
+    midwest_micro,
+    plot(
+        popdensity ~ poptotal,
+        type = "n"
+    )
+)
+
+plts <-
+    lapply(
+        names(midwest_micro_splt),
+        \(s) {
+            with(
+                midwest_micro_splt[[s]],
+                points(
+                    popdensity ~ poptotal,
+                    pch = 19, col = clrs[s]
+                )
+            )
+        }
+    )
+
+legend(
+    "topleft",
+    legend = states,
+    pch = 19, col = clrs,
+    ncol = 5
+)
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+::: {.callout-note style="padding-top: .5em; font-size: .50em;"}
+Note: However, remember that human visual perception is limited, and people cannot read
+too much information at once.
+:::
+:::
+:::::
+
+------
+
+::::: columns
+::: {.column width="48%"}
+```{r}
+#| label: facets-plot-output
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-show: asis
+#| fig-width: 6
+#| fig-height: 6
+#| code-fold: true
+#| code-summary: "expand for full code"
+par(bg = "#f0f1eb")
+
+midwest_micro_splt <-
+    split(midwest_micro,
+          midwest_micro$state)
+
+states <-
+    unique(midwest_micro$state)
+
+par(mfrow = c(ceiling(length(states) / 3), 3))
+
+plts <-
+    lapply(
+        names(midwest_micro_splt),
+        \(s) {
+            with(
+                midwest_micro_splt[[s]],
+                plot(
+                    popdensity ~ poptotal,
+                    pch = 19, main = s
+                )
+            )
+        }
+    )
+
+par(mfrow = c(1, 1))
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+::: {.callout-note style="padding-top: .5em; font-size: .50em;"}
+Note: However, remember that human visual perception is limited, and people cannot read
+too much information at once.
+:::
+:::
+:::::
+
+------
+
+::::: columns
+::: {.column width="48%"}
+```{r}
+#| label: sizes-plot-output
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-show: asis
+#| fig-width: 6
+#| fig-height: 6
+#| code-fold: true
+#| code-summary: "expand for full code"
+par(bg = "#f0f1eb")
+with(
+    midwest_micro,
+    plot(
+        popdensity ~ poptotal,
+        cex = area * 20, pch = 19
+    )
+)
+
+# levels(cut(midwest_micro$area, 5))
+
+legend(
+    "topleft",
+    legend = c(
+        "0.0292", "0.0494", "0.0696",
+        "0.0898", "0.11"
+    ),
+    pt.cex = c(
+        0.0292, 0.0494, 0.0696,
+        0.0898, 0.11
+    ) * 20,
+    pch = 19,
+    ncol = 2,
+    title = "area"
+)
+```
+:::
+
+::: {.column .gutter-left width="48%"}
+::: {.callout-note style="padding-top: .5em; font-size: .50em;"}
+Note: However, remember that human visual perception is limited, and people cannot read
+too much information at once.
+:::
+:::
+:::::
+
+------
+
+## Hands-on Tutorial
+
+-   It's time for our last hands-on tutorial :art:
+
+# Data Visualization in `ggplot2`
+
+## The `ggplot2` Package
+
+-   The `ggplot2` R's package is a key component of the *tidyverse*
+    (<https://tidyverse.org/>) and is today widely used for data visualization.
+
+## The `ggplot2` Grammar
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In most cases:
+    -   You start with `ggplot()`, supply a dataset, and aesthetic mapping (with `aes()`).
+    -   You add on: 
+        -   Layers (like `geom_point()`).
+        -   Scales (like `scale_colour_brewer()`).
+        -   Faceting specifications (like `facet_wrap()`).
+        -   Coordinate systems (like `coord_flip()`).
+:::
+
+::: {.column width="48%" .gutter-left}
+![*Source:* https://ggplot2.tidyverse.org/](https://ggplot2.tidyverse.org/articles/ggplot2_files/figure-html/overview_graphic-1.png)
+:::
+:::::
+
+## Scatter Plot {.center}
+
+```{r}
+#| label: ggplot-scatter-plot
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-width: 5.5
+#| fig-height: 5.5
+#| code-fold: true
+#| code-summary: "expand for full code"
+library(ggplot2)
+
+ggplot(
+    midwest_micro,
+    aes(
+        x = poptotal,
+        y = popdensity
+    )
+) + 
+    geom_point() + 
+    labs(
+        title = "Population of the US midwest counties",
+        x = "Population size",
+        y = "Population density") +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+
+## Histogram Chart {.center}
+
+```{r}
+#| label: ggplot-histogram
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-width: 5.5
+#| fig-height: 5.5
+#| code-fold: true
+#| code-summary: "expand for full code"
+library(ggplot2)
+
+ggplot(
+    midwest_micro,
+    aes(
+        x = poptotal
+    )
+) + 
+    geom_histogram() + 
+    labs(
+        title = "Population size of the US midwest counties",
+        x = "Population size",
+        y = "Num. of counties"
+    ) +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+
+## Box Plot
+
+```{r}
+#| label: ggplot-box-plot
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-width: 5.5
+#| fig-height: 5.5
+#| code-fold: true
+#| code-summary: "expand for full code"
+library(ggplot2)
+
+ggplot(
+    midwest,
+    aes(
+        x = inmetro,
+        y = poptotal
+    )
+) + 
+    geom_boxplot() +
+    scale_x_discrete(
+        labels = c(
+            "0" = "In a Micro-area", 
+            "1" = "In a Metro-area"
+        )
+    ) +
+    scale_y_log10() +
+    labs(
+        title = "Population size of the US midwest counties",
+        x = element_blank(),
+        y = "Population size (log-scale)"
+    ) +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+
+# Visual Human Perception
+
+## Data Visualization and Human Perception (I) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Gestalt psychology is a school that emerged in the early XXth century in Austria and
+    Germany as a theory of human perception.
+-   We can still use some of their conclusions to understand how human visual perception
+    can be used to communicate several data points in a few seconds. 
+-   However, since our visual perception is based on simple heuristics, it can easily
+    reach misleading conclusions about what is shown.
+:::
+
+::: {.column .gutter-left width="48%"}
+The [law of proximity]{.mark} states that we perceive objects that are close to each other
+as forming a group
+
+![](https://upload.wikimedia.org/wikipedia/commons/2/22/Gestalt_proximity.svg){height="250px"}
+:::
+:::::
+
+## Data Visualization and Human Perception (II) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Gestalt psychology is a school that emerged in the early XXth century in Austria and
+    Germany as a theory of human perception.
+-   We can still use some of their conclusions to understand how human visual perception
+    can be used to communicate several data points in a few seconds. 
+-   However, since our visual perception is based on simple heuristics, it can easily
+    reach misleading conclusions about what is shown.
+:::
+
+::: {.column .gutter-left width="48%"}
+The [law of similarity]{.mark} states that we perceive some elements of an assortment as
+grouped if they share some common characteristics (same shape, color, shading, etc.)
+
+![](https://upload.wikimedia.org/wikipedia/commons/8/8f/Gestalt_similarity.svg){height="250px"}
+:::
+:::::
+
+## Data Visualization and Human Perception (III) {.smaller}
+
+::::: columns
+::: {.column width="48%"}
+-   Gestalt psychology is a school that emerged in the early XXth century in Austria and
+    Germany as a theory of human perception.
+-   We can still use some of their conclusions to understand how human visual perception
+    can be used to communicate several data points in a few seconds. 
+-   However, since our visual perception is based on simple heuristics, it can easily
+    reach misleading conclusions about what is shown.
+:::
+
+::: {.column .gutter-left width="48%"}
+[Reification]{.mark} is a generative aspect of perception, such that you tend to see a
+triangle, though no triangle is there
+
+![](https://upload.wikimedia.org/wikipedia/commons/2/27/Reification.svg){height="250px"}
+:::
+:::::
+
+## Mapping Quantities Into Areas (I)
+
+-   Humans tend to associate areas with quantities.
+-   "The representation of numbers, as physically measured on the surface of the graphic itself, should be directly proportional to the quantities represented" --- Tufte (1991 [1983]) *The Visual Display of Quantitative Information*.
+
+## Mapping Quantities Into Areas (II) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+[Misleading]{.mark} pictogram example:
+
+![By Smallman12q - Own work, CC BY-SA 3.0](https://upload.wikimedia.org/wikipedia/commons/a/aa/Pictograph_not_aligned_and_different_size.svg){height="250px"}
+:::
+
+::: {.column .gutter-left width="48%"}
+[Regular]{.mark} pictogram example:
+
+![By Smallman12q - Own work, CC BY-SA 3.0](https://upload.wikimedia.org/wikipedia/commons/2/26/Pictograph_aligned_and_similar_size.svg){height="250px"}
+:::
+:::::
+
+Look at <https://en.wikipedia.org/wiki/Misleading_graph> for other examples of misleading graphs.
+
+## Mapping Quantities Into Areas (III) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In this example, what is the area representing? And what are the data about, instead?
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: ggplot-bar-chart-mapping-areas-1
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: center
+library(dplyr)
+library(ggplot2)
+breaks <-
+    c(1, 25000, 75000, 100000, 110000)
+labels <-
+    c("< 25k", "< 75k", "< 100k", ">= 100k")
+data_plt <-
+    midwest |>
+    filter(inmetro == 0) |>
+    mutate(
+        poptotal_group = cut(
+            poptotal,
+            breaks = breaks,
+            labels = labels,
+            include.lowest = TRUE,
+            right = FALSE
+        )
+    ) |>
+    filter(!is.na(poptotal_group)) |>
+    group_by(poptotal_group) |>
+    summarise(N = n()) |>
+    ungroup() |>
+    mutate(
+        xmin = breaks[1:(length(breaks) - 1)],
+        xmax = breaks[2:length(breaks)],
+        ymin = 0,
+        ymax = N
+    )
+ggplot(
+    data_plt,
+    aes(
+        xmin = xmin,
+        xmax = xmax,
+        ymin = ymin,
+        ymax = ymax
+    )
+) +
+    geom_rect(
+        color = "white"
+    ) +
+    geom_text(
+        aes(
+            x = (xmin + xmax) / 2,
+            y = ymax + 3,
+            label = N
+        ),
+        size = 4
+    ) +
+    labs(
+        title = "Num. of Counties by Population Size Groups in US Midwest (Non-Metro Areas)",
+        x = "Population size",
+        y = "Num. of Counties",
+    ) +
+    scale_x_continuous(labels = scales::comma) +
+    scale_y_continuous(
+        expand = expansion(mult = c(0, 0.1)),
+        breaks = scales::pretty_breaks(n = 5)
+    ) +
+    theme_minimal() +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+:::
+:::::
+
+## Mapping Quantities Into Areas (III) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In this example, what is the area representing? And what are the data about, instead?
+    -   The data are about the number of counties that fall within a population-size range.
+    -   However, the area of each rectangle represents "nothing". <br>
+        Indeed, they would represent the total population of a group of counties only if all the counties of each group fell at the right border of their corresponding bin.
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| label: ggplot-bar-chart-mapping-areas-2
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: center
+library(dplyr)
+library(ggplot2)
+breaks <-
+    c(1, 25000, 75000, 100000, 110000)
+labels <-
+    c("< 25k", "< 75k", "< 100k", ">= 100k")
+data_plt <-
+    midwest |>
+    filter(inmetro == 0) |>
+    mutate(
+        poptotal_group = cut(
+            poptotal,
+            breaks = breaks,
+            labels = labels,
+            include.lowest = TRUE,
+            right = FALSE
+        )
+    ) |>
+    filter(!is.na(poptotal_group)) |>
+    group_by(poptotal_group) |>
+    summarise(N = n()) |>
+    ungroup() |>
+    mutate(
+        xmin = breaks[1:(length(breaks) - 1)],
+        xmax = breaks[2:length(breaks)],
+        ymin = 0,
+        ymax = N
+    )
+ggplot(
+    data_plt,
+    aes(
+        xmin = xmin,
+        xmax = xmax,
+        ymin = ymin,
+        ymax = ymax
+    )
+) +
+    geom_rect(
+        color = "white"
+    ) +
+    geom_text(
+        aes(
+            x = (xmin + xmax) / 2,
+            y = ymax + 3,
+            label = N
+        ),
+        size = 4
+    ) +
+    labs(
+        title = "Num. of Counties by Population Size Groups in US Midwest (Non-Metro Areas)",
+        x = "Population size",
+        y = "Num. of Counties",
+    ) +
+    scale_x_continuous(labels = scales::comma) +
+    scale_y_continuous(
+        expand = expansion(mult = c(0, 0.1)),
+        breaks = scales::pretty_breaks(n = 5)
+    ) +
+    theme_minimal() +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+:::
+:::::
+
+## Mapping Quantities Into Areas (IV) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In this example, what is the area representing? And what are the data about, instead?
+:::
+
+::: {.column .gutter-left width="48%"}
+![](https://hbr.org/resources/html/infographics/2014/12/F1412Z/images/chart-1-1.png)
+:::
+:::::
+
+*Source:* <https://hbr.org/2014/12/vision-statement-how-to-lie-with-charts>
+
+## Mapping Quantities Into Areas (IV) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In this example, what is the area representing? And what are the data about, instead?
+    -   The areas are about the geographical dimension of each state.
+    -   The data are about the influence of each state on the election of the US president (that depends on the population size and not on the geographical size of the state).
+:::
+
+::: {.column .gutter-left width="48%"}
+![](https://hbr.org/resources/html/infographics/2014/12/F1412Z/images/chart-1-1.png)
+:::
+:::::
+
+*Source:* <https://hbr.org/2014/12/vision-statement-how-to-lie-with-charts>
+
+## Mapping Quantities Into Areas (IV) {.smaller}
+
+::::: {.columns}
+::: {.column width="48%"}
+-   In this example, what is the area representing? And what are the data about, instead?
+    -   The areas are about the geographical dimension of each state.
+    -   The data are about the influence of each state on the election of the US president (that depends on the population size and not on the geographical size of the state).
+-   If you correctly use areas to represent quantities (in this case, the number of votes), the perception of what you are observing completely changes.
+:::
+
+::: {.column .gutter-left width="48%"}
+![](https://hbr.org/resources/html/infographics/2014/12/F1412Z/images/chart-1-2.png)
+:::
+:::::
+
+*Source:* <https://hbr.org/2014/12/vision-statement-how-to-lie-with-charts>
+
+## Area and Pie Charts (I)
+
+::::: {.columns}
+::: {.column width="48%"}
+-   Which is the most populated state in the Midwest of the USA?
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| fig-align: center
+#| out-width: 100%
+#| out-height: 100%
+#| echo: false
+#| message: false
+#| warning: false
+par(bg = "#f0f1eb")
+pie_3d <- plotrix::pie3D(population_per_state$poptotal)
+plotrix::pie3D.labels(pie_3d, labels = population_per_state$state)
+```
+:::
+:::::
+
+## Area and Pie Charts (II)
+
+::::: {.columns}
+::: {.column width="48%"}
+-   Which is the most populated state in the Midwest of the USA?
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| fig-align: center
+#| out-width: 100%
+#| out-height: 100%
+#| echo: false
+#| message: false
+#| warning: false
+library(ggplot2)
+
+ggplot(
+    population_per_state,
+    aes(
+        x = "",
+        y = poptotal,
+        fill = state)
+    ) +
+    geom_bar(
+        stat = "identity",
+        width = 1
+    ) +
+    geom_text(
+        aes(
+            label = prettyNum(
+                poptotal,
+                big.mark = ",",
+                scientific = FALSE
+            )
+        ),
+        color = "white",
+        position = position_stack(vjust = 0.5)
+    ) +
+    coord_polar("y", start = 0) +
+    labs(
+        x = element_blank(),
+        y = element_blank()
+    ) +
+    theme_bw() +
+    theme(
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+:::
+:::::
+
+## Area and Pie Charts (III)
+
+::::: {.columns}
+::: {.column width="48%"}
+-   Which is the most populated state in the Midwest of the USA?
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| fig-align: center
+#| out-width: 100%
+#| out-height: 100%
+#| echo: false
+#| message: false
+#| warning: false
+library(ggplot2)
+
+ggplot(
+    population_per_state,
+    aes(
+        x = reorder(state, poptotal),
+        y = poptotal
+    )
+) +
+    geom_segment(
+        aes(
+            xend = reorder(state, poptotal),
+            yend = 0
+        ),
+        color = "grey"
+    ) +
+    geom_point(
+        size = 4,
+        color = "blue"
+    ) +
+    coord_flip() +
+    labs(
+        title = "Population per state in the US midwest",
+        x = "State",
+        y = "Population"
+    ) +
+    theme_bw() +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+:::
+:::::
+
+## Area and Pie Charts (IV)
+
+::::: {.columns}
+::: {.column width="48%"}
+-   Which is the most populated state in the Midwest of the USA?
+:::
+
+::: {.column .gutter-left width="48%"}
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+#| fig-align: center
+#| out-width: 100%
+#| out-height: 100%
+#| echo: false
+#| message: false
+#| warning: false
+library(ggplot2)
+
+ggplot(
+    population_per_state,
+    aes(
+        area = poptotal,
+        fill = state,
+        label = prettyNum(
+            poptotal,
+            big.mark = ",",
+            scientific = FALSE
+        )
+    )
+) +
+    treemapify::geom_treemap() +
+    treemapify::geom_treemap_text(
+        color = "white",
+        place = "centre",
+        size = 10
+    ) +
+    theme_bw() +
+    theme(
+        panel.background = element_rect(fill = "#f0f1eb"),
+        plot.background = element_rect(fill = "#f0f1eb")
+    )
+```
+:::
+:::::
+
+::: {.fragment .tiny-text}
+Pie charts are good for visualizing the proportions of some parts of a total. <br>
+But, in this case, treemaps can be a good (often better) alternative. <br>
+Rectangles are easier to "read", for humans, than the slices of a pie.
+:::
+
+## Lying With Data (I)
+
+-   Data visualization helps a quick and immediate understanding of the data.
+-   However, data visualization can also be (unintentionally or intentionally) misleading.
+
+## Lying With Data (II) {.center}
+
+::::: columns
+::: {.column width="56%"}
+{{< video https://youtu.be/oX74Nge8Wkw?si=ocscwLcrYvneOWhE height="500px">}} <br>
+[*Source:* <https://youtu.be/oX74Nge8Wkw>]{.tiny-text}
+:::
+
+::: {.column .gutter-left width="40%"}
+
+:::
+:::::
+
+## The Good, the Bad, and the Ugly {.center}
+
+![*Source:* C.O. Wilke (2019) *Fundamentals of Data Visualization*, O'Reilly](https://clauswilke.com/dataviz/introduction_files/figure-html/ugly-bad-wrong-examples-1.png){height="500px"}
+
+## Data-Ink Ratio {.center}
+
+::::: columns
+::: {.column width="56%"}
+{{< video https://youtu.be/NyI-_3JeY-k?si=J70iE9WpvGCNTgUm height="500px">}} <br>
+[*Source:* <https://youtu.be/NyI-_3JeY-k>]{.tiny-text}
+:::
+
+::: {.column .gutter-left width="40%"}
+["Above all else, show the data" --- Tufte (1991 [1983]) *The Visual Display of
+ Quantitative Information*.]{.small-text style="padding-top: .50em;"}
+:::
+:::::
+
+# Appendix
+
+## References {.smaller}
+
+-   Introductory materials
+    -   Adler (2012) *R in a Nutshell (2e)*. O'Reilly.
+    -   Grolemund (2014) *Hands-On Programming with R*. O'Reilly. <br>
+        <https://rstudio-education.github.io/hopr/>
+    -   Peng  (2022) *R Programming for Data Science*. <br>
+        <https://bookdown.org/rdpeng/rprogdatascience/>
+-   More advanced materials
+    -   Grolemund and Wickham (2017) *R for Data Science (2e)*. O'Reilly. <br>
+        <https://r4ds.had.co.nz/>
+    -   Gagolewski (2024) *Deep R Programming*. <br>
+        <https://deepr.gagolewski.com/>
+    -   Wilke (2019) *Fundamentals of Data Visualization*. O'Reilly. <br>
+        <https://clauswilke.com/dataviz/>
